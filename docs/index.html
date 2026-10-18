@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YouTube 视频下载器 · 粘链接，选清晰度，下到本地</title>
+<meta name="description" content="一个跑在本机的 YouTube 下载器：解析出的每个分辨率单独成档，标明体积、编码、帧率，选中即下。纯本地运行，不经过第三方服务器。">
+<style>
+  :root {
+    --bg: #0e1014;
+    --panel: #151922;
+    --line: #252b38;
+    --text: #e6e9f0;
+    --dim: #98a1b3;
+    --accent: #5b8cff;
+    --green: #3ecf8e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background:
+      radial-gradient(900px 500px at 15% -10%, rgba(91,140,255,.16), transparent 70%),
+      radial-gradient(700px 400px at 90% 0%, rgba(255,51,85,.10), transparent 70%),
+      var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 64px 22px 96px; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12.5px; letter-spacing: .04em; color: var(--dim);
+    border: 1px solid var(--line); background: rgba(255,255,255,.03);
+    padding: 5px 12px; border-radius: 999px;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+  h1 { font-size: clamp(28px, 5vw, 44px); line-height: 1.25; margin: 20px 0 14px; letter-spacing: -.01em; }
+  .lead { font-size: clamp(15px, 2.2vw, 18px); color: var(--dim); margin: 0 0 30px; max-width: 40em; }
+  .lead strong { color: var(--text); font-weight: 600; }
+
+  .shot {
+    margin: 0 0 34px; border: 1px solid var(--line); border-radius: 14px;
+    overflow: hidden; background: var(--panel);
+    box-shadow: 0 24px 60px -30px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.02) inset;
+  }
+  .shot img { display: block; width: 100%; height: auto; }
+  .cap { font-size: 12.5px; color: #6f7a8d; padding: 10px 14px; border-top: 1px solid var(--line); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 0 0 40px; }
+  .card { border: 1px solid var(--line); background: var(--panel); border-radius: 12px; padding: 18px 18px 16px; }
+  .card h3 { margin: 0 0 6px; font-size: 15px; font-weight: 600; letter-spacing: .01em; }
+  .card p { margin: 0; font-size: 13.5px; color: var(--dim); }
+  .card .k { display: block; font-size: 11.5px; color: #6f7a8d; letter-spacing: .12em; margin-bottom: 10px; }
+
+  h2 { font-size: 15px; letter-spacing: .1em; color: #7c8798; text-transform: uppercase; margin: 44px 0 14px; font-weight: 600; }
+
+  pre {
+    background: #10141c; border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 18px; overflow-x: auto; margin: 0 0 12px;
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 13px; line-height: 1.85;
+  }
+  code { color: #cfe0ff; }
+  .c { color: #5f6b7f; }
+  p.note { font-size: 13.5px; color: var(--dim); }
+  p.note b { color: var(--text); font-weight: 600; }
+
+  .callout {
+    border: 1px solid rgba(255,170,60,.28); background: rgba(255,170,60,.06);
+    border-radius: 12px; padding: 14px 18px; font-size: 13.5px; color: #d8c7a8; margin: 0 0 12px;
+  }
+  .callout b { color: #ffcc7a; }
+
+  .btns { display: flex; flex-wrap: wrap; gap: 10px; margin: 34px 0 0; }
+  a.btn {
+    display: inline-block; text-decoration: none; font-size: 14px; font-weight: 600;
+    padding: 11px 20px; border-radius: 10px; border: 1px solid var(--line); color: var(--text);
+    background: rgba(255,255,255,.03); transition: .15s;
+  }
+  a.btn:hover { background: rgba(255,255,255,.07); border-color: #3a4356; }
+  a.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  a.btn.primary:hover { background: #6c99ff; border-color: #6c99ff; }
+
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 12.5px; color: #66707f; }
+  footer a { color: #8ea6cf; text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <span class="badge"><span class="dot"></span>本地运行 · 不经过第三方服务器</span>
+
+  <h1>YouTube 视频下载器</h1>
+  <p class="lead">
+    粘链接，解析出<strong>每一档分辨率</strong>，标明体积、编码、帧率，选一个就下。
+    纯 Python + yt-dlp，跑在你自己电脑上。
+  </p>
+
+  <figure class="shot">
+    <img src="preview.png" alt="界面预览：视频信息、清晰度档位、下载进度" loading="lazy">
+    <div class="cap">解析之后的样子：每个分辨率一张卡，1080p 及以下优先给 H.264（mp4），4K 只有 VP9/AV1。</div>
+  </figure>
+
+  <div class="grid">
+    <div class="card">
+      <span class="k">清晰度</span>
+      <h3>一档一张卡</h3>
+      <p>分辨率、体积、编码、帧率、容器全写在卡上，「推荐」标在 ≤1080p 里最高的一档，不用猜该下哪个。</p>
+    </div>
+    <div class="card">
+      <span class="k">过程</span>
+      <h3>进度看得见</h3>
+      <p>下载、合并分两条进度，带速度与剩余时间。支持同时下两个、中途取消、下完直接打开位置。</p>
+    </div>
+    <div class="card">
+      <span class="k">风控</span>
+      <h3>登录向导</h3>
+      <p>YouTube 挡了机房/代理 IP 时，点一下弹出独立浏览器窗口登录一次，通过调试协议取明文 cookie，之后全自动。</p>
+    </div>
+  </div>
+
+  <h2>跑起来</h2>
+  <pre><code><span class="c"># 1. 装依赖（Python 3.9+）</span>
+git clone https://github.com/baiqz/youtube-downloader.git
+cd youtube-downloader
+pip install -r requirements.txt
+
+<span class="c"># 2. 放好 ffmpeg：丢进 bin/ 目录，或保证它在 PATH 里</span>
+
+<span class="c"># 3. Windows 双击 start.bat；其他系统</span>
+python app.py</code></pre>
+  <p class="note">浏览器会自动打开 <b>127.0.0.1:8799</b>。第一次用记得在设置里填代理地址——拉 YouTube 需要能出海的网络。</p>
+
+  <h2>为什么不能在线用</h2>
+  <div class="callout">
+    这个应用要调 <b>yt-dlp</b>、<b>ffmpeg</b>，还要读写本机文件、开一个本地浏览器窗口登录——
+    这些都必须有后端进程。所以它只能在你自己电脑上跑，<b>没法部署到纯静态托管</b>。
+    这个页面只是项目主页。
+  </div>
+
+  <div class="btns">
+    <a class="btn primary" href="https://github.com/baiqz/youtube-downloader">看源码 / 下载</a>
+    <a class="btn" href="https://github.com/baiqz/youtube-downloader#readme">使用说明</a>
+  </div>
+
+  <footer>
+    仅供个人学习与离线观看使用，请遵守 YouTube 服务条款与当地版权法规。<br>
+    <a href="https://github.com/baiqz/youtube-downloader">github.com/baiqz/youtube-downloader</a>
+  </footer>
+
+</div>
+</body>
+</html>

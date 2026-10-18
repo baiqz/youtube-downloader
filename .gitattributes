@@ -1,0 +1,4 @@
+* text=auto eol=lf
+
+# 启动脚本必须是 CRLF + GBK，别让 git 改行尾
+start.bat -text

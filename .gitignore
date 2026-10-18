@@ -1,0 +1,15 @@
+# 运行期数据（设置、cookie、浏览器配置、临时分片）
+data/
+downloads/
+bin/
+
+# 临时与调试产物
+_scratch/
+*.log
+*.tmp
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
